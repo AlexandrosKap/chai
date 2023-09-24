@@ -48,7 +48,7 @@ typedef struct {
     size_t capacity;
 } Chai_List_F32;
 
-// --- List Macros
+// --- List macros
 
 // Dependencies:
 // * proc: calloc
@@ -103,7 +103,7 @@ size_t chai_calculate_capacity(size_t length);
 
 Chai_String chai_string_new(size_t length);
 Chai_String chai_string_empty(size_t length);
-Chai_String chai_string_clone(const Chai_String other);
+Chai_String chai_string_clone(Chai_String other);
 Chai_String chai_string_clone_str(const char *str);
 void chai_string_append(Chai_String *list, const char item);
 void chai_string_append_str(Chai_String *list, const char *str);
@@ -111,14 +111,14 @@ void chai_string_free(Chai_String *list);
 
 Chai_List_I32 chai_list_i32_new(size_t length);
 Chai_List_I32 chai_list_i32_empty(size_t length);
-Chai_List_I32 chai_list_i32_clone(const Chai_List_I32 other);
-void chai_list_i32_append(Chai_List_I32 *list, const char item);
+Chai_List_I32 chai_list_i32_clone(Chai_List_I32 other);
+void chai_list_i32_append(Chai_List_I32 *list, int item);
 void chai_list_i32_free(Chai_List_I32 *list);
 
 Chai_List_F32 chai_list_f32_new(size_t length);
 Chai_List_F32 chai_list_f32_empty(size_t length);
-Chai_List_F32 chai_list_f32_clone(const Chai_List_F32 other);
-void chai_list_f32_append(Chai_List_F32 *list, const char item);
+Chai_List_F32 chai_list_f32_clone(Chai_List_F32 other);
+void chai_list_f32_append(Chai_List_F32 *list, float item);
 void chai_list_f32_free(Chai_List_F32 *list);
 
 // --- Implementations
@@ -144,7 +144,7 @@ Chai_String chai_string_empty(size_t length) {
     return result;
 }
 
-Chai_String chai_string_clone(const Chai_String other) {
+Chai_String chai_string_clone(Chai_String other) {
     Chai_String result = chai_string_new(other.length);
     for (size_t i = 0; i < other.length; i += 1) {
         result.items[i] = other.items[i];
@@ -158,7 +158,7 @@ Chai_String chai_string_clone_str(const char *str) {
     return result;
 }
 
-void chai_string_append(Chai_String *list, char item) {
+void chai_string_append(Chai_String *list, const char item) {
     CHAI_GEN_IMP_LIST_APPEND(Chai_String, char, list, item);
     CHAI_GEN_IMP_LIST_APPEND(Chai_String, char, list, '\0');
     list->length -= 1;
@@ -185,12 +185,12 @@ Chai_List_I32 chai_list_i32_empty(size_t length) {
     return result;
 }
 
-Chai_List_I32 chai_list_i32_clone(const Chai_List_I32 other) {
+Chai_List_I32 chai_list_i32_clone(Chai_List_I32 other) {
     CHAI_GEN_IMP_LIST_CLONE(Chai_List_I32, int, other);
     return result;
 }
 
-void chai_list_i32_append(Chai_List_I32 *list, const char item) {
+void chai_list_i32_append(Chai_List_I32 *list, int item) {
     CHAI_GEN_IMP_LIST_APPEND(Chai_List_I32, int, list, item);
 }
 
@@ -208,12 +208,12 @@ Chai_List_F32 chai_list_f32_empty(size_t length) {
     return result;
 }
 
-Chai_List_F32 chai_list_f32_clone(const Chai_List_F32 other) {
+Chai_List_F32 chai_list_f32_clone(Chai_List_F32 other) {
     CHAI_GEN_IMP_LIST_CLONE(Chai_List_F32, float, other);
     return result;
 }
 
-void chai_list_f32_append(Chai_List_F32 *list, const char item) {
+void chai_list_f32_append(Chai_List_F32 *list, float item) {
     CHAI_GEN_IMP_LIST_APPEND(Chai_List_F32, float, list, item);
 }
 

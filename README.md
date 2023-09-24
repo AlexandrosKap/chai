@@ -1,4 +1,4 @@
-# 🍃 Chai
+# 🍵 Chai
 
 A personal header-only utility library for the C programming language.
 
