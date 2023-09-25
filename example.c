@@ -15,7 +15,7 @@ int main(void) {
 
     printf("--- List examples\n");
 
-    Chai_List_F32 numbers = chai_list_f32_empty(0);
+    Chai_List_F32 numbers = chai_list_f32_new(0);
     for (int i = 0; i < 5; i += 1) {
         chai_list_f32_append(&numbers, i * 0.25f);
     }
