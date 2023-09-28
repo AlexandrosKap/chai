@@ -4,9 +4,10 @@ A personal header-only utility library for the C programming language.
 
 ## Types
 
-* Chai_String
+* Chai_List
 * Chai_List_I32
 * Chai_List_F32
+* Chai_String
 
 ## License
 

@@ -1,240 +1,286 @@
 // Copyright 2023 Alexandros F. G. Kapretsos
 // SPDX-License-Identifier: Apache-2.0
 
-// TODO(AlexandrosKap): Write macro function generator for simple lists.
+// TODO(AlexandrosKap): Add float list procedures.
+// TODO(AlexandrosKap): Add string procedures.
+// TODO(AlexandrosKap): Write macro procedure generator for simple lists.
 
 #ifndef CHAI_HEADER
 #define CHAI_HEADER
 
-#ifndef CHAI_NO_STD
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#endif // CHAI_NO_STD
+#include <string.h>
 
-#ifdef CHAI_BASIC_TYPES
-typedef signed char        i8;
-typedef short              i16;
-typedef int                i32;
-typedef long long          i64;
-typedef unsigned char      u8;
-typedef unsigned short     u16;
-typedef unsigned int       u32;
-typedef unsigned long long u64;
-typedef float              f32;
-typedef double             f64;
-typedef size_t             su64;
-typedef ssize_t            si64;
-#endif // CHAI_BASIC_TYPES
-
-#ifndef CHAI_CAPACITY_UNIT
-#define CHAI_CAPACITY_UNIT 32
-#endif // CHAI_CAPACITY_UNIT
-
+#define CHAI_START_CAPACITY 16
 #define CHAI_CAST(type) (type)
-#define CHAI_PANIC(message) assert(message && 0)
-#define CHAI_PANIC_INDEX() CHAI_PANIC("index out of range")
+#define CHAI_TODO(message) assert("TODO" && message && 0);
+#define CHAI_PANIC(message) assert("ERROR" && message && 0)
+#define CHAI_PANIC_INDEX() CHAI_PANIC("Index is out of range.")
 
 typedef struct {
-    char *items;
+    void *items;
     size_t length;
     size_t capacity;
-} Chai_String;
+    size_t item_size;
+} Chai_List;
 
 typedef struct {
-    int *items;
-    size_t length;
-    size_t capacity;
+    Chai_List data;
 } Chai_List_I32;
 
 typedef struct {
-    float *items;
-    size_t length;
-    size_t capacity;
+    Chai_List data;
 } Chai_List_F32;
 
-// --- List macros
-
-// Dependencies:
-// * proc: calloc
-// * proc: realloc
-// * proc: chai_calculate_capacity
-
-#define CHAI_GEN_IMP_LIST_NEW(Type_List, Type_Item, value_length)                  \
-    Type_List result;                                                              \
-    do {                                                                           \
-        size_t capacity = chai_calculate_capacity(value_length, 0);                \
-        result.items = CHAI_CAST(Type_Item *) calloc(capacity, sizeof(Type_Item)); \
-        result.length = value_length;                                              \
-        result.capacity = capacity;                                                \
-    } while (0)                                                                    \
-
-#define CHAI_GEN_IMP_LIST_CLONE(Type_List, Type_Item, value_other)   \
-    CHAI_GEN_IMP_LIST_NEW(Type_List, Type_Item, value_other.length); \
-    do {                                                             \
-        for (size_t i = 0; i < value_other.length; i += 1) {         \
-            result.items[i] = value_other.items[i];                  \
-        }                                                            \
-    } while (0)                                                      \
-
-#define CHAI_GEN_IMP_LIST_APPEND(Type_List, Type_Item, value_list, value_item)                                   \
-    do {                                                                                                         \
-        value_list->length += 1;                                                                                 \
-        if (value_list->length > value_list->capacity) {                                                         \
-            size_t capacity = chai_calculate_capacity(value_list->length, value_list->capacity);                 \
-            value_list->items = CHAI_CAST(Type_Item *) realloc(value_list->items, capacity * sizeof(Type_Item)); \
-            value_list->capacity = capacity;                                                                     \
-        }                                                                                                        \
-        value_list->items[value_list->length - 1] = value_item;                                                  \
-    } while (0)                                                                                                  \
-
-#define CHAI_GEN_IMP_LIST_FREE(value_list) \
-    do {                                   \
-        free(value_list->items);           \
-        value_list->items = NULL;          \
-        value_list->length = 0;            \
-        value_list->capacity = 0;          \
-    } while (0)                            \
+typedef struct {
+    Chai_List data;
+} Chai_String;
 
 // --- Definitions
 
-size_t chai_calculate_capacity(size_t length, size_t start_capacity);
+size_t chai_find_capacity(size_t length);
 
-Chai_String chai_string_new(size_t length);
-Chai_String chai_string_clone(Chai_String other);
-Chai_String chai_string_clone_str(const char *str);
-char chai_string_get(Chai_String *list, size_t index);
-void chai_string_set(Chai_String *list, size_t index, const char item);
-void chai_string_append(Chai_String *list, const char item);
-void chai_string_append_str(Chai_String *list, const char *str);
-void chai_string_insert(Chai_String *list, const char item);     // TODO(AlexandrosKap): Not done.
-void chai_string_insert_str(Chai_String *list, const char *str); // TODO(AlexandrosKap): Not done.
-void chai_string_resize(Chai_String *list, size_t length);       // TODO(AlexandrosKap): Not done.
-void chai_string_reserve(Chai_String *list, size_t capacity);    // TODO(AlexandrosKap): Not done.
-void chai_string_remove(Chai_String *list, size_t index);        // TODO(AlexandrosKap): Not done.
-void chai_string_clear(Chai_String *list);                       // TODO(AlexandrosKap): Not done.
-void chai_string_free(Chai_String *list);
+Chai_List chai_list_new(size_t length, size_t item_size);
+Chai_List chai_list_copy(Chai_List other);
+void * chai_list_item(Chai_List *list, size_t index);
+void chai_list_fill(Chai_List *list, void *item);
+void chai_list_append(Chai_List *list, void *item);
+void chai_list_insert(Chai_List *list, size_t index, void *item);
+void chai_list_remove(Chai_List *list, size_t index);
+void chai_list_remove_swap(Chai_List *list, size_t index);
+void chai_list_resize(Chai_List *list, size_t length);
+void chai_list_reserve(Chai_List *list, size_t additional);
+void chai_list_shrink(Chai_List *list);
+void chai_list_clear(Chai_List *list);
+void chai_list_free(Chai_List *list);
 
 Chai_List_I32 chai_list_i32_new(size_t length);
-Chai_List_I32 chai_list_i32_clone(Chai_List_I32 other);
-int chai_list_i32_get(Chai_List_I32 *list, size_t index);            // TODO(AlexandrosKap): Not done.
-void chai_list_i32_set(Chai_List_I32 *list, size_t index, int item); // TODO(AlexandrosKap): Not done.
+Chai_List_I32 chai_list_i32_copy(Chai_List_I32 other);
+int * chai_list_i32_item(Chai_List_I32 *list, size_t index);
+void chai_list_i32_fill(Chai_List_I32 *list, int item);
 void chai_list_i32_append(Chai_List_I32 *list, int item);
-void chai_list_i32_insert(Chai_List_I32 *list, int item);            // TODO(AlexandrosKap): Not done.
-void chai_list_i32_resize(Chai_List_I32 *list, size_t length);       // TODO(AlexandrosKap): Not done.
-void chai_list_i32_reserve(Chai_List_I32 *list, size_t capacity);    // TODO(AlexandrosKap): Not done.
-void chai_list_i32_remove(Chai_List_I32 *list, size_t index);        // TODO(AlexandrosKap): Not done.
-void chai_list_i32_clear(Chai_List_I32 *list);                       // TODO(AlexandrosKap): Not done.
+void chai_list_i32_insert(Chai_List_I32 *list, size_t index, int item);
+void chai_list_i32_remove(Chai_List_I32 *list, size_t index);
+void chai_list_i32_remove_swap(Chai_List_I32 *list, size_t index);
+void chai_list_i32_resize(Chai_List_I32 *list, size_t length);
+void chai_list_i32_reserve(Chai_List_I32 *list, size_t additional);
+void chai_list_i32_shrink(Chai_List_I32 *list);
+void chai_list_i32_clear(Chai_List_I32 *list);
 void chai_list_i32_free(Chai_List_I32 *list);
-
-Chai_List_F32 chai_list_f32_new(size_t length);
-Chai_List_F32 chai_list_f32_clone(Chai_List_F32 other);
-float chai_list_f32_get(Chai_List_F32 *list, size_t index);            // TODO(AlexandrosKap): Not done.
-void chai_list_f32_set(Chai_List_F32 *list, size_t index, float item); // TODO(AlexandrosKap): Not done.
-void chai_list_f32_append(Chai_List_F32 *list, float item);
-void chai_list_f32_insert(Chai_List_F32 *list, float item);            // TODO(AlexandrosKap): Not done.
-void chai_list_f32_resize(Chai_List_F32 *list, size_t length);         // TODO(AlexandrosKap): Not done.
-void chai_list_f32_reserve(Chai_List_F32 *list, size_t capacity);      // TODO(AlexandrosKap): Not done.
-void chai_list_f32_remove(Chai_List_F32 *list, size_t index);          // TODO(AlexandrosKap): Not done.
-void chai_list_f32_clear(Chai_List_F32 *list);                         // TODO(AlexandrosKap): Not done.
-void chai_list_f32_free(Chai_List_F32 *list);
 
 // --- Implementations
 
-size_t chai_calculate_capacity(size_t length, size_t start_capacity) {
-    size_t result = start_capacity;
+size_t chai_find_capacity(size_t length) {
+    size_t result = CHAI_START_CAPACITY;
     while (result < length) {
-        result += CHAI_CAPACITY_UNIT;
+        result *= 2;
     }
     return result;
 }
 
-Chai_String chai_string_new(size_t length) {
-    CHAI_GEN_IMP_LIST_NEW(Chai_String, char, length + 1);
-    result.items[result.length - 1] = '\0';
-    result.length -= 1;
-    return result;
-}
-
-Chai_String chai_string_clone(Chai_String other) {
-    Chai_String result = chai_string_new(other.length);
-    for (size_t i = 0; i < other.length; i += 1) {
-        result.items[i] = other.items[i];
+Chai_List chai_list_new(size_t length, size_t item_size) {
+    Chai_List result;
+    if (length == 0) {
+        result.items = NULL;
+        result.length = 0;
+        result.capacity = 0;
+        result.item_size = item_size;
+    } else {
+        size_t capacity = chai_find_capacity(length);
+        result.items = malloc(capacity * item_size);
+        result.length = length;
+        result.capacity = capacity;
+        result.item_size = item_size;
+        memset(result.items, 0, capacity * item_size);
     }
     return result;
 }
 
-Chai_String chai_string_clone_str(const char *str) {
-    Chai_String result = chai_string_new(0);
-    chai_string_append_str(&result, str);
+Chai_List chai_list_copy(Chai_List other) {
+    Chai_List result;
+    if (other.capacity == 0) {
+        result.items = NULL;
+        result.length = 0;
+        result.capacity = 0;
+        result.item_size = other.item_size;
+    } else {
+        result.items = malloc(other.capacity * other.item_size);
+        result.length = other.length;
+        result.capacity = other.capacity;
+        result.item_size = other.item_size;
+        memcpy(result.items, other.items, other.capacity * other.item_size);
+    }
     return result;
 }
 
-char chai_string_get(Chai_String *list, size_t index) {
-    if (index >= list->length) {
-        CHAI_PANIC_INDEX();
-    }
-    return list->items[index];
+void * chai_list_item(Chai_List *list, size_t index) {
+    return (CHAI_CAST(char *) list->items) + index * list->item_size;
 }
 
-void chai_string_set(Chai_String *list, size_t index, const char item) {
-    if (index >= list->length) {
-        CHAI_PANIC_INDEX();
+void chai_list_fill(Chai_List *list, void *item) {
+    for (size_t i = 0; i < list->length; i += 1) {
+        memcpy(chai_list_item(list, i), item, list->item_size);
     }
-    list->items[index] = item;
 }
 
-void chai_string_append(Chai_String *list, const char item) {
-    CHAI_GEN_IMP_LIST_APPEND(Chai_String, char, list, item);
-    CHAI_GEN_IMP_LIST_APPEND(Chai_String, char, list, '\0');
+void chai_list_append(Chai_List *list, void *item) {
+    list->length += 1;
+    if (list->length > list->capacity) {
+        size_t new_capacity = chai_find_capacity(list->length);
+        list->items = realloc(list->items, new_capacity * list->item_size);
+        list->capacity = new_capacity;
+    }
+    memcpy(chai_list_item(list, list->length - 1), item, list->item_size);
+}
+
+void chai_list_insert(Chai_List *list, size_t index, void *item) {
+    list->length += 1;
+    if (list->length > list->capacity) {
+        size_t new_capacity = chai_find_capacity(list->length);
+        list->items = realloc(list->items, new_capacity * list->item_size);
+        list->capacity = new_capacity;
+    }
+    for (size_t i = list->length - 1; i > index; i -= 1) {
+        memcpy(chai_list_item(list, i), chai_list_item(list, i - 1), list->item_size);
+    }
+    memcpy(chai_list_item(list, index), item, list->item_size);
+}
+
+void chai_list_remove(Chai_List *list, size_t index) {
+    if (list->length == 0) {
+        return;
+    }
+    for (size_t i = index; i < list->length - 1; i += 1) {
+        memcpy(chai_list_item(list, i), chai_list_item(list, i + 1), list->item_size);
+    }
     list->length -= 1;
 }
 
-void chai_string_append_str(Chai_String *list, const char *str) {
-    while (*str != '\0') {
-        chai_string_append(list, *str);
-        str += 1;
+void chai_list_remove_swap(Chai_List *list, size_t index) {
+    if (list->length == 0) {
+        return;
+    }
+    memcpy(chai_list_item(list, index), chai_list_item(list, list->length - 1), list->item_size);
+    list->length -= 1;
+}
+
+void chai_list_resize(Chai_List *list, size_t length) {
+    size_t old_length = list->length;
+    list->length = length;
+    if (list->length > list->capacity) {
+        size_t new_capacity = chai_find_capacity(list->length);
+        list->items = realloc(list->items, new_capacity * list->item_size);
+        list->capacity = new_capacity;
+    }
+    if (list->length > old_length) {
+        memset(chai_list_item(list, old_length), 0, (list->length - old_length) * list->item_size);
     }
 }
 
-void chai_string_free(Chai_String *list) {
-    CHAI_GEN_IMP_LIST_FREE(list);
+void chai_list_reserve(Chai_List *list, size_t additional) {
+    size_t temp_length = list->length;
+    list->length = list->capacity + additional;
+    if (list->length > list->capacity) {
+        size_t new_capacity = chai_find_capacity(list->length);
+        list->items = realloc(list->items, new_capacity * list->item_size);
+        list->capacity = new_capacity;
+    }
+    list->length = temp_length;
+}
+
+void chai_list_shrink(Chai_List *list) {
+    size_t new_capacity = chai_find_capacity(list->length);
+    if (new_capacity != list->capacity) {
+        list->items = realloc(list->items, new_capacity * list->item_size);
+        list->capacity = new_capacity;
+    }
+}
+
+void chai_list_clear(Chai_List *list) {
+    chai_list_resize(list, 0);
+}
+
+void chai_list_free(Chai_List *list) {
+    if (list->items != NULL) {
+        free(list->items);
+        list->items = NULL;
+        list->length = 0;
+        list->capacity = 0;
+    }
 }
 
 Chai_List_I32 chai_list_i32_new(size_t length) {
-    CHAI_GEN_IMP_LIST_NEW(Chai_List_I32, int, length);
+    Chai_List_I32 result;
+    result.data = chai_list_new(length, sizeof(int));
     return result;
 }
 
-Chai_List_I32 chai_list_i32_clone(Chai_List_I32 other) {
-    CHAI_GEN_IMP_LIST_CLONE(Chai_List_I32, int, other);
+Chai_List_I32 chai_list_i32_copy(Chai_List_I32 other) {
+    Chai_List_I32 result;
+    result.data = chai_list_copy(other.data);
     return result;
+}
+
+int * chai_list_i32_item(Chai_List_I32 *list, size_t index) {
+    if (index >= list->data.length) {
+        CHAI_PANIC_INDEX();
+        return NULL;
+    }
+    return CHAI_CAST(int *) chai_list_item(&list->data, index);
+}
+
+void chai_list_i32_fill(Chai_List_I32 *list, int item) {
+    chai_list_fill(&list->data, &item);
 }
 
 void chai_list_i32_append(Chai_List_I32 *list, int item) {
-    CHAI_GEN_IMP_LIST_APPEND(Chai_List_I32, int, list, item);
+    chai_list_append(&list->data, &item);
+}
+
+void chai_list_i32_insert(Chai_List_I32 *list, size_t index, int item) {
+    if (index > list->data.length) {
+        CHAI_PANIC_INDEX();
+        return;
+    }
+    chai_list_insert(&list->data, index, &item);
+}
+
+void chai_list_i32_remove(Chai_List_I32 *list, size_t index) {
+    if (index >= list->data.length) {
+        CHAI_PANIC_INDEX();
+        return;
+    }
+    chai_list_remove(&list->data, index);
+}
+
+void chai_list_i32_remove_swap(Chai_List_I32 *list, size_t index) {
+    if (index >= list->data.length) {
+        CHAI_PANIC_INDEX();
+        return;
+    }
+    chai_list_remove_swap(&list->data, index);
+}
+
+void chai_list_i32_resize(Chai_List_I32 *list, size_t length) {
+    chai_list_resize(&list->data, length);
+}
+
+void chai_list_i32_reserve(Chai_List_I32 *list, size_t additional) {
+    chai_list_reserve(&list->data, additional);
+}
+
+void chai_list_i32_shrink(Chai_List_I32 *list) {
+    chai_list_shrink(&list->data);
+}
+
+void chai_list_i32_clear(Chai_List_I32 *list) {
+    chai_list_clear(&list->data);
 }
 
 void chai_list_i32_free(Chai_List_I32 *list) {
-    CHAI_GEN_IMP_LIST_FREE(list);
-}
-
-Chai_List_F32 chai_list_f32_new(size_t length) {
-    CHAI_GEN_IMP_LIST_NEW(Chai_List_F32, float, length);
-    return result;
-}
-
-Chai_List_F32 chai_list_f32_clone(Chai_List_F32 other) {
-    CHAI_GEN_IMP_LIST_CLONE(Chai_List_F32, float, other);
-    return result;
-}
-
-void chai_list_f32_append(Chai_List_F32 *list, float item) {
-    CHAI_GEN_IMP_LIST_APPEND(Chai_List_F32, float, list, item);
-}
-
-void chai_list_f32_free(Chai_List_F32 *list) {
-    CHAI_GEN_IMP_LIST_FREE(list);
+    chai_list_free(&list->data);
 }
 
 #endif // CHAI_HEADER
