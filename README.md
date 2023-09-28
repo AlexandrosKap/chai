@@ -1,6 +1,7 @@
 # 🍵 Chai
 
 A personal header-only utility library for the C programming language.
+Chai is intended to be an easy-to-use tool that provides basic data structures such as lists and strings.
 
 ## Types
 
