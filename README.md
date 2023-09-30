@@ -5,6 +5,7 @@ Chai is intended to be an easy-to-use tool that provides basic data structures s
 
 ## Types
 
+* Chai_View
 * Chai_List
 * Chai_List_I32
 * Chai_List_F32
