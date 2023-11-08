@@ -575,12 +575,7 @@ void chai_list_clear(Chai_List *list) {
 }
 
 void chai_list_free(Chai_List *list) {
-    if (list->items != NULL) {
-        chai_free(list->items);
-        list->items = NULL;
-        list->count = 0;
-        list->capacity = 0;
-    }
+    chai_free(list->items);
 }
 
 Chai_String chai_string_new(size_t count) {
