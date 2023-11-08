@@ -9,7 +9,7 @@ Chai provides basic data structures such as lists and strings.
 * Chai_List
 * Chai_String
 
-# Examples
+## Examples
 
 Examples of how to use the various data structures can be found in the examples.c file.
 The following section is a short example of how to create a new list type:
