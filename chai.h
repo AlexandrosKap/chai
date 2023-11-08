@@ -9,27 +9,7 @@
 #define CHAI_HEADER
 
 #define CHAI_WHITESPACE " \t\v\r\n\f"
-#define CHAI_LIST_START_CAPACITY 16
-
-#ifndef CHAI_ASSERT
-#define CHAI_ASSERT(value) assert(value)
-#endif // CHAI_ASSERT
-
-#ifndef CHAI_MALLOC
-#define CHAI_MALLOC(size) malloc(size)
-#endif // CHAI_MALLOC
-
-#ifndef CHAI_REALLOC
-#define CHAI_REALLOC(ptr, size) realloc(ptr, size)
-#endif // CHAI_REALLOC
-
-#ifndef CHAI_FREE
-#define CHAI_FREE(ptr) free(ptr)
-#endif // CHAI_FREE
-
-#define CHAI_CAST(type) (type)
-#define CHAI_PANIC(message) CHAI_ASSERT(message && 0)
-#define CHAI_PANIC_INDEX() CHAI_PANIC("Index is out of range.")
+#define CHAI_LIST_START_CAPACITY 32
 
 typedef struct Chai_View {
     const char *items;
@@ -116,11 +96,25 @@ Chai_String chai_string_copy_str(const char *str);
 void chai_string_append_str(Chai_String *list, const char *str);
 void chai_string_insert_str(Chai_String *list, size_t index, const char *str);
 
-#endif // CHAI_HEADER
+#ifndef CHAI_ASSERT
+#define CHAI_ASSERT(value) assert(value)
+#endif // CHAI_ASSERT
 
-#ifdef CHAI_IMPLEMENTATION
-#ifndef CHAI_IMPLEMENTATION_ADDED
-#define CHAI_IMPLEMENTATION_ADDED
+#ifndef CHAI_MALLOC
+#define CHAI_MALLOC(size) malloc(size)
+#endif // CHAI_MALLOC
+
+#ifndef CHAI_REALLOC
+#define CHAI_REALLOC(ptr, size) realloc(ptr, size)
+#endif // CHAI_REALLOC
+
+#ifndef CHAI_FREE
+#define CHAI_FREE(ptr) free(ptr)
+#endif // CHAI_FREE
+
+#define CHAI_CAST(type) (type)
+#define CHAI_PANIC(message) CHAI_ASSERT(message && 0)
+#define CHAI_PANIC_INDEX() CHAI_PANIC("Index is out of range.")
 
 #define CHAI_MAKE_LIST_PROCEDURES(List_Type, Item_Type, prefix)             \
     List_Type prefix ## _new(size_t count) {                                \
@@ -201,6 +195,12 @@ void chai_string_insert_str(Chai_String *list, size_t index, const char *str);
     } List_Type;                                                            \
                                                                             \
     CHAI_MAKE_LIST_PROCEDURES(List_Type, Item_Type, prefix)
+
+#endif // CHAI_HEADER
+
+#ifdef CHAI_IMPLEMENTATION
+#ifndef CHAI_IMPLEMENTATION_ADDED
+#define CHAI_IMPLEMENTATION_ADDED
 
 void * chai_malloc(size_t size) {
     return CHAI_MALLOC(size);
