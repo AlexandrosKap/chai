@@ -16,11 +16,6 @@ void * chai_malloc(size_t size);
 void * chai_realloc(void *ptr, size_t size);
 void chai_free(void *ptr);
 
-void chai_mem_set(const void *mem, unsigned char value, size_t count);
-void chai_mem_copy(const void *mem, const void *source, size_t count);
-bool chai_mem_equals(const void *mem, const void *other, size_t count);
-size_t chai_str_count(const char *str);
-
 size_t chai_find_capacity(size_t count);
 bool chai_is_upper_case(char c);
 bool chai_is_lower_case(char c);
@@ -29,6 +24,14 @@ bool chai_is_whitespace(char c);
 bool chai_is_digit(char c);
 char chai_to_upper_case(char c);
 char chai_to_lower_case(char c);
+
+void chai_mem_set(const void *mem, unsigned char value, size_t count);
+void chai_mem_copy(const void *mem, const void *source, size_t count);
+bool chai_mem_equals(const void *mem, const void *other, size_t count);
+
+size_t chai_str_count(const char *str);
+bool chai_str_equals(const char *str, const char *other);
+bool chai_str_equals_ignore_case(const char *str, const char *other);
 
 Chai_View chai_view_new(const char *str);
 Chai_View chai_view_from(Chai_View view, size_t min, size_t max);
@@ -44,9 +47,13 @@ int chai_view_find_right(Chai_View view, Chai_View item);
 Chai_View chai_view_trim_left(Chai_View view);
 Chai_View chai_view_trim_right(Chai_View view);
 Chai_View chai_view_trim(Chai_View view);
+Chai_View chai_view_skip_line(Chai_View *view);
 
 #define CHAI_WHITESPACE " \t\v\r\n\f"
+
+#ifndef CHAI_LIST_START_CAPACITY
 #define CHAI_LIST_START_CAPACITY 16
+#endif // CHAI_LIST_START_CAPACITY
 
 #define CHAI_CAST(type) (type)
 
@@ -195,6 +202,10 @@ Chai_View chai_view_trim(Chai_View view);
             list->items = chai_realloc(list->items, capacity * sizeof(Item_Type));                      \
             list->capacity = capacity;                                                                  \
         }                                                                                               \
+    }                                                                                                   \
+                                                                                                        \
+    void prefix ## _clear(List_Type *list) {                                                            \
+        prefix ## _resize(list, 0);                                                                     \
     }
 
 #endif // CHAI_HEADER
@@ -213,35 +224,6 @@ void * chai_realloc(void *ptr, size_t size) {
 
 void chai_free(void *ptr) {
     CHAI_FREE(ptr);
-}
-
-void chai_mem_set(const void *mem, unsigned char value, size_t count) {
-    for (size_t i = 0; i < count; i += 1) {
-        (CHAI_CAST(unsigned char *) mem)[i] = value;
-    }
-}
-
-void chai_mem_copy(const void *mem, const void *source, size_t count) {
-    for (size_t i = 0; i < count; i += 1) {
-        (CHAI_CAST(unsigned char *) mem)[i] = (CHAI_CAST(unsigned char *) source)[i];
-    }
-}
-
-bool chai_mem_equals(const void *mem, const void *other, size_t count) {
-    for (size_t i = 0; i < count; i += 1) {
-        if ((CHAI_CAST(char *) mem)[i] != (CHAI_CAST(char *) other)[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-size_t chai_str_count(const char *str) {
-    size_t result = 0;
-    while (str[result] != '\0') {
-        result += 1;
-    }
-    return result;
 }
 
 size_t chai_find_capacity(size_t count) {
@@ -295,6 +277,57 @@ char chai_to_lower_case(char c) {
     }
 }
 
+void chai_mem_set(const void *mem, unsigned char value, size_t count) {
+    for (size_t i = 0; i < count; i += 1) {
+        (CHAI_CAST(unsigned char *) mem)[i] = value;
+    }
+}
+
+void chai_mem_copy(const void *mem, const void *source, size_t count) {
+    for (size_t i = 0; i < count; i += 1) {
+        (CHAI_CAST(unsigned char *) mem)[i] = (CHAI_CAST(unsigned char *) source)[i];
+    }
+}
+
+bool chai_mem_equals(const void *mem, const void *other, size_t count) {
+    for (size_t i = 0; i < count; i += 1) {
+        if ((CHAI_CAST(char *) mem)[i] != (CHAI_CAST(char *) other)[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+size_t chai_str_count(const char *str) {
+    size_t result = 0;
+    while (str[result] != '\0') {
+        result += 1;
+    }
+    return result;
+}
+
+bool chai_str_equals(const char *str, const char *other) {
+    while (*str != '\0' && *other != '\0') {
+        if (*str != *other) {
+            return false;
+        }
+        str += 1;
+        other += 1;
+    }
+    return *str == '\0' && *other == '\0';
+}
+
+bool chai_str_equals_ignore_case(const char *str, const char *other) {
+    while (*str != '\0' && *other != '\0') {
+        if (chai_to_lower_case(*str) != chai_to_lower_case(*other)) {
+            return false;
+        }
+        str += 1;
+        other += 1;
+    }
+    return *str == '\0' && *other == '\0';
+}
+
 Chai_View chai_view_new(const char *str) {
     Chai_View result;
     result.items = str;
@@ -332,7 +365,12 @@ bool chai_view_equals(Chai_View view, Chai_View other) {
     if (view.count != other.count) {
         return false;
     }
-    return chai_mem_equals(view.items, other.items, other.count);
+    for (size_t i = 0; i < view.count; i += 1) {
+        if (view.items[i] != other.items[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool chai_view_equals_ignore_case(Chai_View view, Chai_View other) {
@@ -429,6 +467,18 @@ Chai_View chai_view_trim_right(Chai_View view) {
 
 Chai_View chai_view_trim(Chai_View view) {
     return chai_view_trim_left(chai_view_trim_right(view));
+}
+
+Chai_View chai_view_skip_line(Chai_View *view) {
+    Chai_View result = chai_view_new("");
+    for (size_t i = 0; i <= view->count; i += 1) {
+        if (i == view->count || view->items[i] == '\n') {
+            result = chai_view_from(*view, 0, i);
+            *view = chai_view_from(*view, i + 1, view->count);
+            break;
+        }
+    }
+    return result;
 }
 
 #endif // CHAI_IMPLEMENTATION_ADDED

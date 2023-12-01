@@ -2,21 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #define CHAI_IMPLEMENTATION // This will insert the implementation of chai into this file.
-#define PRINT_SPACE "  "  // This is used for pushing the printed values to the right.
+#define PRINT_SPACE "  "    // This is used for pushing the printed values to the right.
 
-#include "chai.h"
 #include <stdio.h>
+#include "chai.h"
 
-// The first argument is the type of the list item.
-// The second argument is the name of the list.
-// The third argument is the prefix that each procedure associated with the list will use.
+/// Creates a new list type.
+/// The first argument is the type of the list item.
+/// The second argument is the name of the list.
+/// The third argument is the prefix that each procedure associated with the list will use.
 CHAI_CREATE_LIST(int, Numbers, numbers)
 
 void print_view(Chai_View view) {
     printf("%s\"", PRINT_SPACE);
-    for (size_t i = 0; i < view.count; i += 1) {
-        char item = view.items[i];
-        printf("%c", item);
+    for (int i = 0; i < view.count; i += 1) {
+        printf("%c", view.items[i]);
     }
     printf("\"\n");
 }
@@ -24,12 +24,11 @@ void print_view(Chai_View view) {
 void print_numbers(Numbers numbers) {
     printf("%s(capacity: %ld) ", PRINT_SPACE, numbers.capacity);
     printf("[");
-    for (size_t i = 0; i < numbers.count; i += 1) {
-        int item = numbers.items[i];
+    for (int i = 0; i < numbers.count; i += 1) {
         if (i != numbers.count - 1) {
-            printf("%d, ", item);
+            printf("%d, ", numbers.items[i]);
         } else {
-            printf("%d]\n", item);
+            printf("%d]\n", numbers.items[i]);
         }
     }
 }
@@ -45,6 +44,12 @@ int main(void) {
     print_view(chai_view_trim_right(chai_view_new("Two.    ")));
     print_view(chai_view_trim(chai_view_new("   Three.  ")));
     print_view(chai_view_trim(chai_view_new("     ")));
+
+    Chai_View csv = chai_view_new("1,2,3\na,b,c\ni,j,k\n");
+    print_view(chai_view_skip_line(&csv));
+    print_view(chai_view_skip_line(&csv));
+    print_view(chai_view_skip_line(&csv));
+    print_view(chai_view_skip_line(&csv));
     
     printf("\n# List Example\n");
     Numbers numbers = numbers_new(0);
@@ -53,7 +58,7 @@ int main(void) {
     }
     print_numbers(numbers);
 
-    numbers_resize(&numbers, 0);
+    numbers_clear(&numbers);
     for (int i = 0; i < 5; i += 1) {
         numbers_append(&numbers, i * 75);
     }
