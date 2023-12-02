@@ -35,22 +35,40 @@ void print_numbers(Numbers numbers) {
 
 int main(void) {
     printf("# View Example\n");
-    Chai_View view = chai_view_new("Orange Carrot");
+    Chai_View temp;
+    Chai_View view = chai_view_new("orange carrot");
     print_view(view);
-    print_view(chai_view_from(view, 0, 6));
-    print_view(chai_view_from(view, 7, view.count));
+    print_view(chai_view_from(view, 0, view.count));
     print_view(chai_view_from(view, view.count, view.count));
-    print_view(chai_view_trim_left(chai_view_new("    One.")));
-    print_view(chai_view_trim_right(chai_view_new("Two.    ")));
-    print_view(chai_view_trim(chai_view_new("   Three.  ")));
+    print_view(chai_view_trim_left(chai_view_new("    one.")));
+    print_view(chai_view_trim_right(chai_view_new("two.    ")));
+    print_view(chai_view_trim(chai_view_new("   three.  ")));
     print_view(chai_view_trim(chai_view_new("     ")));
+
+    temp = view;
+    chai_view_skip_over(&temp, chai_view_new("orange "));
+    print_view(temp);
+    chai_view_skip_over(&temp, chai_view_new("apple "));
+    print_view(temp);
+    
+    temp = view;
+    chai_view_skip_until(&temp, chai_view_new(" "));
+    print_view(temp);
+    chai_view_skip_until(&temp, chai_view_new(" "));
+    print_view(temp);
+
+    Chai_View cmd = chai_view_new("rm -rf ohno");
+    print_view(chai_view_skip_item(&cmd));
+    print_view(chai_view_skip_item(&cmd));
+    print_view(chai_view_skip_item(&cmd));
+    print_view(chai_view_skip_item(&cmd));
 
     Chai_View csv = chai_view_new("1,2,3\na,b,c\ni,j,k\n");
     print_view(chai_view_skip_line(&csv));
     print_view(chai_view_skip_line(&csv));
     print_view(chai_view_skip_line(&csv));
     print_view(chai_view_skip_line(&csv));
-    
+
     printf("\n# List Example\n");
     Numbers numbers = numbers_new(0);
     for (int i = 0; i < 5; i += 1) {

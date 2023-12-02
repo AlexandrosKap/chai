@@ -1,6 +1,9 @@
 // Copyright 2023 Alexandros F. G. Kapretsos
 // SPDX-License-Identifier: Apache-2.0
 
+// I need to write a test script.
+// Testing with example.c is not the best idea.
+
 #ifndef CHAI_HEADER
 #define CHAI_HEADER
 
@@ -47,6 +50,9 @@ int chai_view_find_right(Chai_View view, Chai_View item);
 Chai_View chai_view_trim_left(Chai_View view);
 Chai_View chai_view_trim_right(Chai_View view);
 Chai_View chai_view_trim(Chai_View view);
+Chai_View chai_view_skip_over(Chai_View *view, Chai_View content);
+Chai_View chai_view_skip_until(Chai_View *view, Chai_View content);
+Chai_View chai_view_skip_item(Chai_View *view);
 Chai_View chai_view_skip_line(Chai_View *view);
 
 #define CHAI_WHITESPACE " \t\v\r\n\f"
@@ -469,16 +475,49 @@ Chai_View chai_view_trim(Chai_View view) {
     return chai_view_trim_left(chai_view_trim_right(view));
 }
 
-Chai_View chai_view_skip_line(Chai_View *view) {
-    Chai_View result = chai_view_new("");
-    for (size_t i = 0; i <= view->count; i += 1) {
-        if (i == view->count || view->items[i] == '\n') {
-            result = chai_view_from(*view, 0, i);
-            *view = chai_view_from(*view, i + 1, view->count);
-            break;
+Chai_View chai_view_skip_over(Chai_View *view, Chai_View content) {
+    if (chai_view_starts_with(*view, content)) {
+        *view = chai_view_from(*view, content.count, view->count);
+        return content;
+    } else {
+        return chai_view_new("");
+    }
+}
+
+Chai_View chai_view_skip_until(Chai_View *view, Chai_View content) {
+    if (view->count == 0 || content.count == 0 || view->count < content.count) {
+        return chai_view_new("");
+    }
+    for (size_t i = 0; i <= view->count - content.count; i += 1) {
+        Chai_View part = chai_view_from(*view, i, i + content.count);
+        if (chai_view_equals(part, content)) {
+            Chai_View left_part = chai_view_from(*view, 0, i + part.count);
+            *view = chai_view_from(*view, i + part.count, view->count);
+            return left_part;
         }
     }
-    return result;
+    return chai_view_new("");
+}
+
+Chai_View chai_view_skip_item(Chai_View *view) {
+    for (size_t i = 0; i <= view->count; i += 1) {
+        if (i == view->count || view->items[i] == ' ') {
+            Chai_View left_part = chai_view_from(*view, 0, i);
+            *view = chai_view_from(*view, i + 1, view->count);
+            return left_part;
+        }
+    }
+    return chai_view_new("");}
+
+Chai_View chai_view_skip_line(Chai_View *view) {
+    for (size_t i = 0; i <= view->count; i += 1) {
+        if (i == view->count || view->items[i] == '\n') {
+            Chai_View left_part = chai_view_from(*view, 0, i);
+            *view = chai_view_from(*view, i + 1, view->count);
+            return left_part;
+        }
+    }
+    return chai_view_new("");
 }
 
 #endif // CHAI_IMPLEMENTATION_ADDED
