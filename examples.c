@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #define CHAI_IMPLEMENTATION // This will insert the implementation of chai into this file.
-#define PRINT_SPACE "  "    // This is used for pushing the printed values to the right.
+#define SPACE "  "          // This is used for pushing the printed values to the right.
 
 #include <stdio.h>
 #include "chai.h"
@@ -14,7 +14,7 @@
 CHAI_CREATE_LIST(int, Numbers, numbers)
 
 void print_view(Chai_View view) {
-    printf("%s\"", PRINT_SPACE);
+    printf("%s\"", SPACE);
     for (int i = 0; i < view.count; i += 1) {
         printf("%c", view.items[i]);
     }
@@ -22,7 +22,7 @@ void print_view(Chai_View view) {
 }
 
 void print_numbers(Numbers numbers) {
-    printf("%s(capacity: %ld) ", PRINT_SPACE, numbers.capacity);
+    printf("%s(capacity: %ld) ", SPACE, numbers.capacity);
     printf("[");
     for (int i = 0; i < numbers.count; i += 1) {
         if (i != numbers.count - 1) {
@@ -68,6 +68,22 @@ int main(void) {
     print_view(chai_view_skip_arg(&cmd));
     print_view(chai_view_skip_arg(&cmd));
     print_view(chai_view_skip_arg(&cmd));
+
+    Chai_View vn1 = chai_view_new("+69");
+    int n1;
+    if (chai_view_to_int(vn1, &n1)) {
+        printf("%s%d\n", SPACE, n1);
+    } else {
+        printf("%s%s\n", SPACE, "error");
+    }
+
+    Chai_View vn2 = chai_view_new("+420.69");
+    float n2;
+    if (chai_view_to_float(vn2, &n2)) {
+        printf("%s%g\n", SPACE, n2);
+    } else {
+        printf("%s%s\n", SPACE, "error");
+    }
 
     printf("\n# List Example\n");
     Numbers numbers = numbers_new(0);

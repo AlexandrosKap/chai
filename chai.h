@@ -1,8 +1,7 @@
 // Copyright 2023 Alexandros F. G. Kapretsos
 // SPDX-License-Identifier: Apache-2.0
 
-// I need to write a test script.
-// Testing with example.c is not the best idea.
+// I need to write a test script. Testing with example.c is not the best idea.
 
 #ifndef CHAI_HEADER
 #define CHAI_HEADER
@@ -27,14 +26,11 @@ bool chai_is_whitespace(char c);
 bool chai_is_digit(char c);
 char chai_to_upper_case(char c);
 char chai_to_lower_case(char c);
+int chai_to_digit(char c);
 
 void chai_mem_set(const void *mem, unsigned char value, size_t count);
 void chai_mem_copy(const void *mem, const void *source, size_t count);
 bool chai_mem_equals(const void *mem, const void *other, size_t count);
-
-size_t chai_str_count(const char *str);
-bool chai_str_equals(const char *str, const char *other);
-bool chai_str_equals_ignore_case(const char *str, const char *other);
 
 Chai_View chai_view_new(const char *str);
 Chai_View chai_view_from(Chai_View view, size_t min, size_t max);
@@ -54,6 +50,9 @@ Chai_View chai_view_skip_over(Chai_View *view, Chai_View content);
 Chai_View chai_view_skip_until(Chai_View *view, Chai_View content);
 Chai_View chai_view_skip_line(Chai_View *view);
 Chai_View chai_view_skip_arg(Chai_View *view);
+bool chai_view_to_str(Chai_View view, char *buffer);
+bool chai_view_to_int(Chai_View view, int *buffer);
+bool chai_view_to_float(Chai_View view, float *buffer);
 
 #define CHAI_WHITESPACE " \t\v\r\n\f"
 
@@ -283,6 +282,10 @@ char chai_to_lower_case(char c) {
     }
 }
 
+int chai_to_digit(char c) {
+    return c - 48;
+}
+
 void chai_mem_set(const void *mem, unsigned char value, size_t count) {
     for (size_t i = 0; i < count; i += 1) {
         (CHAI_CAST(unsigned char *) mem)[i] = value;
@@ -304,40 +307,13 @@ bool chai_mem_equals(const void *mem, const void *other, size_t count) {
     return true;
 }
 
-size_t chai_str_count(const char *str) {
-    size_t result = 0;
-    while (str[result] != '\0') {
-        result += 1;
-    }
-    return result;
-}
-
-bool chai_str_equals(const char *str, const char *other) {
-    while (*str != '\0' && *other != '\0') {
-        if (*str != *other) {
-            return false;
-        }
-        str += 1;
-        other += 1;
-    }
-    return *str == '\0' && *other == '\0';
-}
-
-bool chai_str_equals_ignore_case(const char *str, const char *other) {
-    while (*str != '\0' && *other != '\0') {
-        if (chai_to_lower_case(*str) != chai_to_lower_case(*other)) {
-            return false;
-        }
-        str += 1;
-        other += 1;
-    }
-    return *str == '\0' && *other == '\0';
-}
-
 Chai_View chai_view_new(const char *str) {
     Chai_View result;
     result.items = str;
-    result.count = chai_str_count(str);
+    result.count = 0;
+    while (str[result.count] != '\0') {
+        result.count += 1;
+    }
     return result;
 }
 
@@ -519,6 +495,94 @@ Chai_View chai_view_skip_arg(Chai_View *view) {
         }
     }
     return chai_view_new("");
+}
+
+bool chai_view_to_str(Chai_View view, char *buffer) {
+    for (size_t i = 0; i < view.count; i += 1) {
+        buffer[i] = view.items[i];
+    }
+    buffer[view.count] = '\0';
+    return true;
+}
+
+bool chai_view_to_int(Chai_View view, int *buffer) {
+    if (view.count == 0) {
+        return false;
+    }
+
+    int sign = 1;
+    if (view.count != 0) {
+        if (view.items[0] == '-') {
+            sign = -1;
+            view = chai_view_from(view, 1, view.count);
+        } else if (view.items[0] == '+') {
+            sign = 1;
+            view = chai_view_from(view, 1, view.count);
+        }
+    }
+
+    int level = 1;
+    for (size_t i = 1; i < view.count; i += 1) {
+        level *= 10;
+    }
+
+    int result = 0;
+    for (size_t i = 0; i < view.count; i += 1) {
+        if (chai_is_digit(view.items[i])) {
+            result += sign * level * chai_to_digit(view.items[i]);
+            level /= 10;
+        } else {
+            return false;
+        }
+    }
+    *buffer = result;
+    return true;
+}
+
+bool chai_view_to_float(Chai_View view, float *buffer) {
+    if (view.count == 0) {
+        return false;
+    }
+
+    int sign = 1;
+    if (view.count != 0) {
+        if (view.items[0] == '-') {
+            sign = -1;
+            view = chai_view_from(view, 1, view.count);
+        } else if (view.items[0] == '+') {
+            sign = 1;
+            view = chai_view_from(view, 1, view.count);
+        }
+    }
+
+    int level = 1;
+    for (size_t i = 1; i < view.count; i += 1) {
+        if (view.items[i] == '.') {
+            break;
+        }
+        level *= 10;
+    }
+
+    bool is_after_dot = false;
+    int dot_level = 10;
+    float result = 0.0f;
+    for (size_t i = 0; i < view.count; i += 1) {
+        if (view.items[i] == '.' && !is_after_dot) {
+            is_after_dot = true;
+        } else if (chai_is_digit(view.items[i])) {
+            if (is_after_dot) {
+                result += 1.0f * sign * chai_to_digit(view.items[i]) / dot_level;
+                dot_level *= 10;
+            } else {
+                result += sign * level * chai_to_digit(view.items[i]);
+                level /= 10;
+            }
+        } else {
+            return false;
+        }
+    }
+    *buffer = result;
+    return true;
 }
 
 #endif // CHAI_IMPLEMENTATION_ADDED
