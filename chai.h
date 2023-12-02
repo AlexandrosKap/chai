@@ -52,8 +52,8 @@ Chai_View chai_view_trim_right(Chai_View view);
 Chai_View chai_view_trim(Chai_View view);
 Chai_View chai_view_skip_over(Chai_View *view, Chai_View content);
 Chai_View chai_view_skip_until(Chai_View *view, Chai_View content);
-Chai_View chai_view_skip_item(Chai_View *view);
 Chai_View chai_view_skip_line(Chai_View *view);
+Chai_View chai_view_skip_arg(Chai_View *view);
 
 #define CHAI_WHITESPACE " \t\v\r\n\f"
 
@@ -499,19 +499,20 @@ Chai_View chai_view_skip_until(Chai_View *view, Chai_View content) {
     return chai_view_new("");
 }
 
-Chai_View chai_view_skip_item(Chai_View *view) {
+Chai_View chai_view_skip_line(Chai_View *view) {
     for (size_t i = 0; i <= view->count; i += 1) {
-        if (i == view->count || view->items[i] == ' ') {
+        if (i == view->count || view->items[i] == '\n') {
             Chai_View left_part = chai_view_from(*view, 0, i);
             *view = chai_view_from(*view, i + 1, view->count);
             return left_part;
         }
     }
-    return chai_view_new("");}
+    return chai_view_new("");
+}
 
-Chai_View chai_view_skip_line(Chai_View *view) {
+Chai_View chai_view_skip_arg(Chai_View *view) {
     for (size_t i = 0; i <= view->count; i += 1) {
-        if (i == view->count || view->items[i] == '\n') {
+        if (i == view->count || view->items[i] == ' ') {
             Chai_View left_part = chai_view_from(*view, 0, i);
             *view = chai_view_from(*view, i + 1, view->count);
             return left_part;

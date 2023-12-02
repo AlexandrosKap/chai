@@ -57,17 +57,17 @@ int main(void) {
     chai_view_skip_until(&temp, chai_view_new(" "));
     print_view(temp);
 
-    Chai_View cmd = chai_view_new("rm -rf ohno");
-    print_view(chai_view_skip_item(&cmd));
-    print_view(chai_view_skip_item(&cmd));
-    print_view(chai_view_skip_item(&cmd));
-    print_view(chai_view_skip_item(&cmd));
-
     Chai_View csv = chai_view_new("1,2,3\na,b,c\ni,j,k\n");
     print_view(chai_view_skip_line(&csv));
     print_view(chai_view_skip_line(&csv));
     print_view(chai_view_skip_line(&csv));
     print_view(chai_view_skip_line(&csv));
+
+    Chai_View cmd = chai_view_new("rm -rf ohno");
+    print_view(chai_view_skip_arg(&cmd));
+    print_view(chai_view_skip_arg(&cmd));
+    print_view(chai_view_skip_arg(&cmd));
+    print_view(chai_view_skip_arg(&cmd));
 
     printf("\n# List Example\n");
     Numbers numbers = numbers_new(0);
