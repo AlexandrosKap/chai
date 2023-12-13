@@ -11,7 +11,7 @@
 /// The first argument is the type of the list item.
 /// The second argument is the name of the list.
 /// The third argument is the prefix that each procedure associated with the list will use.
-CHAI_CREATE_LIST(int, Numbers, numbers)
+CHAI_CREATE_LIST_TYPE(int, Numbers, numbers)
 
 void print_view(Chai_View view) {
     printf("%s\"", SPACE);
@@ -112,6 +112,6 @@ int main(void) {
     numbers_resize(&numbers, 5);
     print_numbers(numbers);
     
-    numbers_free(&numbers);
+    numbers_free(numbers);
     return 0;
 }

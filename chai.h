@@ -78,7 +78,7 @@ bool chai_view_to_float(Chai_View view, float *buffer);
 /// The first argument is the type of the list item.
 /// The second argument is the name of the list.
 /// The third argument is the prefix that each procedure associated with the list will use.
-#define CHAI_CREATE_LIST(Item_Type, List_Type, prefix)                                                  \
+#define CHAI_CREATE_LIST_TYPE(Item_Type, List_Type, prefix)                                             \
     typedef struct List_Type {                                                                          \
         Item_Type *items;                                                                               \
         size_t count;                                                                                   \
@@ -116,15 +116,15 @@ bool chai_view_to_float(Chai_View view, float *buffer);
         return result;                                                                                  \
     }                                                                                                   \
                                                                                                         \
-    void prefix ## _free(List_Type *list) {                                                             \
-        chai_free(list->items);                                                                         \
+    void prefix ## _free(List_Type  list) {                                                             \
+        chai_free(list.items);                                                                          \
     }                                                                                                   \
                                                                                                         \
-    Item_Type * prefix ## _item(List_Type *list, size_t index) {                                        \
-        if (index >= list->count) {                                                                     \
+    Item_Type * prefix ## _item(List_Type list, size_t index) {                                         \
+        if (index >= list.count) {                                                                      \
             return NULL;                                                                                \
         }                                                                                               \
-        return list->items + index;                                                                     \
+        return list.items + index;                                                                      \
     }                                                                                                   \
                                                                                                         \
     void prefix ## _fill(List_Type *list, Item_Type item) {                                             \
@@ -487,9 +487,9 @@ Chai_View chai_view_skip_line(Chai_View *view) {
 }
 
 Chai_View chai_view_skip_arg(Chai_View *view) {
-    for (size_t i = 0; i <= view->count; i += 1) {
-        if (i == view->count || view->items[i] == ' ') {
-            Chai_View left_part = chai_view_from(*view, 0, i);
+    for (size_t i = 1; i <= view->count; i += 1) {
+        if (i == view->count || (view->items[i - 1] != ' ' && view->items[i] == ' ')) {
+            Chai_View left_part = chai_view_trim_left(chai_view_from(*view, 0, i));
             *view = chai_view_from(*view, i + 1, view->count);
             return left_part;
         }
