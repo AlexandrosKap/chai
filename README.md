@@ -3,21 +3,13 @@
 A personal header-only utility library for the C programming language.
 Chai provides basic data structures such as lists.
 
-## Types
-
-* Chai_View
-
 ## Examples
 
-Examples of how to use the various data structures can be found in the examples.c file.
-The following section is a short example of how to create a new list type:
+Examples of how to use the various data structures and procedures can be found in the chai_test.c file.
+The file can be compiled and executed on Linux with:
 
 ```c
-/// Creates a new list type.
-/// The first argument is the type of the list item.
-/// The second argument is the name of the list.
-/// The third argument is the prefix that each procedure associated with the list will use.
-CHAI_CREATE_LIST(int, Numbers, numbers)
+cc chai_test.c && ./a.out
 ```
 
 ## License

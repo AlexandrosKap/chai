@@ -1,8 +1,6 @@
 // Copyright 2023 Alexandros F. G. Kapretsos
 // SPDX-License-Identifier: Apache-2.0
 
-// I need to write a test script. Testing with example.c is not the best idea.
-
 #ifndef CHAI_HEADER
 #define CHAI_HEADER
 
@@ -18,26 +16,25 @@ void * chai_malloc(size_t size);
 void * chai_realloc(void *ptr, size_t size);
 void chai_free(void *ptr);
 
-size_t chai_find_capacity(size_t count);
-bool chai_is_upper_case(char c);
-bool chai_is_lower_case(char c);
-bool chai_is_alphabetic(char c);
-bool chai_is_whitespace(char c);
+bool chai_is_upper(char c);
+bool chai_is_lower(char c);
+bool chai_is_alpha(char c);
+bool chai_is_space(char c);
 bool chai_is_digit(char c);
-char chai_to_upper_case(char c);
-char chai_to_lower_case(char c);
+char chai_to_upper(char c);
+char chai_to_lower(char c);
 int chai_to_digit(char c);
+size_t chai_find_list_capacity(size_t count);
 
 void chai_mem_set(const void *mem, unsigned char value, size_t count);
 void chai_mem_copy(const void *mem, const void *source, size_t count);
 bool chai_mem_equals(const void *mem, const void *other, size_t count);
 
 Chai_View chai_view_new(const char *str);
-Chai_View chai_view_from(Chai_View view, size_t min, size_t max);
-Chai_View chai_view_parts(const char *ptr, size_t min, size_t max);
+Chai_View chai_view_from(Chai_View view, size_t a, size_t b);
 const char * chai_view_item(Chai_View view, size_t index);
 bool chai_view_equals(Chai_View view, Chai_View other);
-bool chai_view_equals_ignore_case(Chai_View view, Chai_View other);
+bool chai_view_equals_ignore(Chai_View view, Chai_View other);
 bool chai_view_starts_with(Chai_View view, Chai_View start);
 bool chai_view_ends_with(Chai_View view, Chai_View end);
 int chai_view_count(Chai_View view, Chai_View item);
@@ -46,19 +43,16 @@ int chai_view_find_right(Chai_View view, Chai_View item);
 Chai_View chai_view_trim_left(Chai_View view);
 Chai_View chai_view_trim_right(Chai_View view);
 Chai_View chai_view_trim(Chai_View view);
-Chai_View chai_view_skip_over(Chai_View *view, Chai_View content);
-Chai_View chai_view_skip_until(Chai_View *view, Chai_View content);
-Chai_View chai_view_skip_line(Chai_View *view);
-Chai_View chai_view_skip_arg(Chai_View *view);
+Chai_View chai_view_skip_over(Chai_View *view, Chai_View content); // Think about it and test it later.
+Chai_View chai_view_skip_until(Chai_View *view, Chai_View content); // Think about it and test it later.
+Chai_View chai_view_skip_line(Chai_View *view); // Think about it and test it later.
+Chai_View chai_view_skip_arg(Chai_View *view); // Think about it and test it later.
 bool chai_view_to_str(Chai_View view, char *buffer);
 bool chai_view_to_int(Chai_View view, int *buffer);
 bool chai_view_to_float(Chai_View view, float *buffer);
 
-#define CHAI_WHITESPACE " \t\v\r\n\f"
-
-#ifndef CHAI_LIST_START_CAPACITY
+#define CHAI_SPACE " \t\v\r\n\f"
 #define CHAI_LIST_START_CAPACITY 16
-#endif // CHAI_LIST_START_CAPACITY
 
 #define CHAI_CAST(type) (type)
 
@@ -92,7 +86,7 @@ bool chai_view_to_float(Chai_View view, float *buffer);
             result.count = 0;                                                                           \
             result.capacity = 0;                                                                        \
         } else {                                                                                        \
-            size_t capacity = chai_find_capacity(count);                                                \
+            size_t capacity = chai_find_list_capacity(count);                                           \
             result.items = chai_malloc(capacity * sizeof(Item_Type));                                   \
             chai_mem_set(result.items, 0, capacity * sizeof(Item_Type));                                \
             result.count = count;                                                                       \
@@ -136,7 +130,7 @@ bool chai_view_to_float(Chai_View view, float *buffer);
     void prefix ## _append(List_Type *list, Item_Type item) {                                           \
         list->count += 1;                                                                               \
         if (list->count > list->capacity) {                                                             \
-            size_t capacity = chai_find_capacity(list->count);                                          \
+            size_t capacity = chai_find_list_capacity(list->count);                                     \
             list->items = chai_realloc(list->items, capacity * sizeof(Item_Type));                      \
             list->capacity = capacity;                                                                  \
         }                                                                                               \
@@ -149,7 +143,7 @@ bool chai_view_to_float(Chai_View view, float *buffer);
         }                                                                                               \
         list->count += 1;                                                                               \
         if (list->count > list->capacity) {                                                             \
-            size_t capacity = chai_find_capacity(list->count);                                          \
+            size_t capacity = chai_find_list_capacity(list->count);                                     \
             list->items = chai_realloc(list->items, capacity * sizeof(Item_Type));                      \
             list->capacity = capacity;                                                                  \
         }                                                                                               \
@@ -181,7 +175,7 @@ bool chai_view_to_float(Chai_View view, float *buffer);
         size_t old_count = list->count;                                                                 \
         list->count = count;                                                                            \
         if (list->count > list->capacity) {                                                             \
-            size_t capacity = chai_find_capacity(list->count);                                          \
+            size_t capacity = chai_find_list_capacity(list->count);                                     \
             list->items = chai_realloc(list->items, capacity * sizeof(Item_Type));                      \
             list->capacity = capacity;                                                                  \
         }                                                                                               \
@@ -194,7 +188,7 @@ bool chai_view_to_float(Chai_View view, float *buffer);
         size_t temp_count = list->count;                                                                \
         list->count = list->count + additional;                                                         \
         if (list->count > list->capacity) {                                                             \
-            size_t capacity = chai_find_capacity(list->count);                                          \
+            size_t capacity = chai_find_list_capacity(list->count);                                     \
             list->items = chai_realloc(list->items, capacity * sizeof(Item_Type));                      \
             list->capacity = capacity;                                                                  \
         }                                                                                               \
@@ -202,7 +196,7 @@ bool chai_view_to_float(Chai_View view, float *buffer);
     }                                                                                                   \
                                                                                                         \
     void prefix ## _shrink(List_Type *list) {                                                           \
-        size_t capacity = chai_find_capacity(list->count);                                              \
+        size_t capacity = chai_find_list_capacity(list->count);                                         \
         if (capacity != list->capacity) {                                                               \
             list->items = chai_realloc(list->items, capacity * sizeof(Item_Type));                      \
             list->capacity = capacity;                                                                  \
@@ -231,33 +225,25 @@ void chai_free(void *ptr) {
     CHAI_FREE(ptr);
 }
 
-size_t chai_find_capacity(size_t count) {
-    size_t result = CHAI_LIST_START_CAPACITY;
-    while (result < count) {
-        result *= 2;
-    }
-    return result;
-}
-
-bool chai_is_upper_case(char c) {
+bool chai_is_upper(char c) {
     return c >= 65 && c <= 90;
 }
 
-bool chai_is_lower_case(char c) {
+bool chai_is_lower(char c) {
     return c >= 97 && c <= 122;
 }
 
-bool chai_is_alphabetic(char c) {
-    return chai_is_upper_case(c) || chai_is_lower_case(c);
+bool chai_is_alpha(char c) {
+    return chai_is_upper(c) || chai_is_lower(c);
 }
 
-bool chai_is_whitespace(char c) {
-    const char *whitespace = CHAI_WHITESPACE;
-    while (*whitespace != '\0') {
-        if (c == *whitespace) {
+bool chai_is_space(char c) {
+    const char *space = CHAI_SPACE;
+    while (*space != '\0') {
+        if (c == *space) {
             return true;
         }
-        whitespace += 1;
+        space += 1;
     }
     return false;
 }
@@ -266,16 +252,16 @@ bool chai_is_digit(char c) {
     return c >= 48 && c <= 57;
 }
 
-char chai_to_upper_case(char c) {
-    if (chai_is_lower_case(c)) {
+char chai_to_upper(char c) {
+    if (chai_is_lower(c)) {
         return c - 32;
     } else {
         return c;
     }
 }
 
-char chai_to_lower_case(char c) {
-    if (chai_is_upper_case(c)) {
+char chai_to_lower(char c) {
+    if (chai_is_upper(c)) {
         return c + 32;
     } else {
         return c;
@@ -283,7 +269,19 @@ char chai_to_lower_case(char c) {
 }
 
 int chai_to_digit(char c) {
-    return c - 48;
+    if (chai_is_digit(c)) {
+        return c - 48;
+    } else {
+        return -1;
+    }
+}
+
+size_t chai_find_list_capacity(size_t count) {
+    size_t result = CHAI_LIST_START_CAPACITY;
+    while (result < count) {
+        result *= 2;
+    }
+    return result;
 }
 
 void chai_mem_set(const void *mem, unsigned char value, size_t count) {
@@ -317,22 +315,15 @@ Chai_View chai_view_new(const char *str) {
     return result;
 }
 
-Chai_View chai_view_from(Chai_View view, size_t min, size_t max) {
+Chai_View chai_view_from(Chai_View view, size_t a, size_t b) {
     Chai_View result;
     result.items = NULL;
     result.count = 0;
-    if (min > max || min > view.count || max > view.count) {
+    if (a > b || a > view.count || b > view.count) {
         return result;
     }
-    result.items = view.items + min;
-    result.count = max - min;
-    return result;
-}
-
-Chai_View chai_view_parts(const char *ptr, size_t min, size_t max) {
-    Chai_View result;
-    result.items = ptr + min;
-    result.count = max - min;
+    result.items = view.items + a;
+    result.count = b - a;
     return result;
 }
 
@@ -355,12 +346,12 @@ bool chai_view_equals(Chai_View view, Chai_View other) {
     return true;
 }
 
-bool chai_view_equals_ignore_case(Chai_View view, Chai_View other) {
+bool chai_view_equals_ignore(Chai_View view, Chai_View other) {
     if (view.count != other.count) {
         return false;
     }
     for (size_t i = 0; i < view.count; i += 1) {
-        if (chai_to_lower_case(view.items[i]) != chai_to_lower_case(other.items[i])) {
+        if (chai_to_lower(view.items[i]) != chai_to_lower(other.items[i])) {
             return false;
         }
     }
@@ -382,7 +373,7 @@ bool chai_view_ends_with(Chai_View view, Chai_View end) {
 }
 
 int chai_view_count(Chai_View view, Chai_View item) {
-    size_t result = 0;
+    int result = 0;
     if (view.count < item.count || item.count == 0) {
         return result;
     }
@@ -401,7 +392,7 @@ int chai_view_find_left(Chai_View view, Chai_View item) {
     }
     for (size_t i = 0; i <= view.count - item.count; i += 1) {
         if (chai_mem_equals(view.items + i, item.items, item.count)) {
-            return i;
+            return CHAI_CAST(int) i;
         }
     }
     return -1;
@@ -413,7 +404,7 @@ int chai_view_find_right(Chai_View view, Chai_View item) {
     }
     for (size_t i = view.count - item.count;; i -= 1) {
         if (chai_mem_equals(view.items + i, item.items, item.count)) {
-            return i;
+            return CHAI_CAST(int) i;
         }
         if (i == 0) {
             return -1;
@@ -425,7 +416,7 @@ int chai_view_find_right(Chai_View view, Chai_View item) {
 Chai_View chai_view_trim_left(Chai_View view) {
     Chai_View result = view;
     while (result.count > 0) {
-        if (chai_is_whitespace(result.items[0])) {
+        if (chai_is_space(result.items[0])) {
             result.items += 1;
             result.count -= 1;
         } else {
@@ -438,7 +429,7 @@ Chai_View chai_view_trim_left(Chai_View view) {
 Chai_View chai_view_trim_right(Chai_View view) {
     Chai_View result = view;
     while (result.count > 0) {
-        if (chai_is_whitespace(result.items[result.count - 1])) {
+        if (chai_is_space(result.items[result.count - 1])) {
             result.count -= 1;
         } else {
             break;
@@ -571,10 +562,10 @@ bool chai_view_to_float(Chai_View view, float *buffer) {
             is_after_dot = true;
         } else if (chai_is_digit(view.items[i])) {
             if (is_after_dot) {
-                result += 1.0f * sign * chai_to_digit(view.items[i]) / dot_level;
+                result += (1.0f * CHAI_CAST(float) (sign * chai_to_digit(view.items[i]))) / CHAI_CAST(float) dot_level;
                 dot_level *= 10;
             } else {
-                result += sign * level * chai_to_digit(view.items[i]);
+                result += CHAI_CAST(float) (sign * level * chai_to_digit(view.items[i]));
                 level /= 10;
             }
         } else {
